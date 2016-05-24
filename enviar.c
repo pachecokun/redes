@@ -125,6 +125,7 @@ int main(int argc,char* argv[]){
     if(dev == NULL)
     { printf("%s\n",pcap_errbuf); exit(1); }
     pcap = pcap_open_live(dev,BUFSIZ,1,-1,pcap_errbuf);
+    printf("Utilizando interfaz %s\n",dev);
 	if (pcap_errbuf[0]!='\0') {
 		fprintf(stderr,"%s",pcap_errbuf);
 	}
