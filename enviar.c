@@ -49,8 +49,11 @@ void enviar(char dest,char comando, char* datos,char len){
 	char packet[15+len];
 	int i;
 		
-	for(i = 0;i<12;i++){
+	for(i = 0;i<6;i++){
 		packet[i]=0xff;
+	}
+	for(i = 6;i<12;i++){
+		packet[i]=0x0a;
 	}
 	
     packet[12] = dest;
@@ -74,7 +77,12 @@ void callback(u_char *args,const struct pcap_pkthdr* pkthdr,const u_char*
 	int i;
 	
 	char dest = packet[12];
-	for(i = 0;i<12;i++){
+	for(i = 0;i<6;i++){
+		if(packet[i]!=0xff){
+			return;
+		}
+	}
+	for(i = 6;i<12;i++){
 		if(packet[i]!=0x0a){
 			return;
 		}
