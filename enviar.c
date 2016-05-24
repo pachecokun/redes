@@ -95,26 +95,26 @@ int main(int argc,char* argv[]){
 	char ok = 1;
 	char dir_dest = 0;
 	char* file;
-	if(argc < 4){
+	if(argc < 3){
 		ok = 0;
 	}
-	else if(strcmp(argv[3],"s")!=0&&strcmp(argv[3],"r")!=0){
+	else if(strcmp(argv[2],"s")!=0&&strcmp(argv[2],"r")!=0){
 		ok = 0;
 	}
 	else{
-		dir = atoi(argv[2]);
-		if(strcmp(argv[3],"s")==0){
+		dir = atoi(argv[1]);
+		if(strcmp(argv[2],"s")==0){
 			if (argc<5){
 				ok = 0;
 			}
 			else{
-				dir_dest = atoi(argv[4]);
-				file = argv[5];
+				dir_dest = atoi(argv[3]);
+				file = argv[4];
 			}
 		}
 	}
 	if(!ok){
-		printf("USO:\n\nenviar interfaz dir s dir_destino archvo\n\nenviar interfaz dir r\n\n");
+		printf("USO:\n\nenviar dir s dir_destino archvo\n\nenviar dir r\n\n");
 		exit(0);
 	}
 	
@@ -124,7 +124,7 @@ int main(int argc,char* argv[]){
     char *dev = pcap_lookupdev(pcap_errbuf);
     if(dev == NULL)
     { printf("%s\n",pcap_errbuf); exit(1); }
-    pcap = pcap_open_live("lo",BUFSIZ,1,-1,pcap_errbuf);
+    pcap = pcap_open_live(dev,BUFSIZ,1,-1,pcap_errbuf);
 	if (pcap_errbuf[0]!='\0') {
 		fprintf(stderr,"%s",pcap_errbuf);
 	}
