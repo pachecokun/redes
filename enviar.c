@@ -22,6 +22,7 @@ void procesar(int comando,char*datos,int len){
 		sprintf(nfile,"%s","copia/");
 		strcat(nfile,datos);
 		printf("recibiendo archivo %s\n",datos);
+		umask(0);
 		if(!(copia = fopen(nfile,"wb"))){
 			printf("Error al crear archivo %s\n",nfile);
 			exit(0);
