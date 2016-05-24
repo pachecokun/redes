@@ -95,26 +95,26 @@ int main(int argc,char* argv[]){
 	char ok = 1;
 	char dir_dest = 0;
 	char* file;
-	if(argc < 3){
+	if(argc < 4){
 		ok = 0;
 	}
-	else if(strcmp(argv[2],"s")!=0&&strcmp(argv[2],"r")!=0){
+	else if(strcmp(argv[3],"s")!=0&&strcmp(argv[3],"r")!=0){
 		ok = 0;
 	}
 	else{
-		dir = atoi(argv[1]);
-		if(strcmp(argv[2],"s")==0){
+		dir = atoi(argv[2]);
+		if(strcmp(argv[3],"s")==0){
 			if (argc<5){
 				ok = 0;
 			}
 			else{
-				dir_dest = atoi(argv[3]);
-				file = argv[4];
+				dir_dest = atoi(argv[4]);
+				file = argv[5];
 			}
 		}
 	}
 	if(!ok){
-		printf("USO:\n\nenviar dir s dir_destino archvo\n\nenviar dir r\n\n");
+		printf("USO:\n\nenviar interfaz dir s dir_destino archvo\n\nenviar interfaz dir r\n\n");
 		exit(0);
 	}
 	
