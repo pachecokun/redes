@@ -50,7 +50,7 @@ void enviar(char dest,char comando, char* datos,char len){
 	int i;
 		
 	for(i = 0;i<12;i++){
-		packet[i]=0x0a;
+		packet[i]=0xff;
 	}
 	
     packet[12] = dest;
