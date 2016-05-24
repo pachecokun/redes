@@ -11,20 +11,22 @@ pcap_t* pcap;
 char dir;
 char packet[100];
 FILE* f;
-
-
 FILE*copia;
 
 void procesar(int comando,char*datos,int len){
 	//printf("comando: %d, longitud: %d, datos: %s\n",comando,len,datos);
 	if(comando == 1){
-		char nfile[] = "copia/";
+		char nfile[8+len];
+		sprintf(nfile,"%s","copia/");
 		strcat(nfile,datos);
 		printf("recibiendo archivo %s\n",datos);
-		copia = fopen(nfile,"w");
+		if(!(copia = fopen(nfile,"wb"))){
+			printf("Error al crear archivo %s\n",nfile);
+			exit(0);
+		}
 	}
 	else if(comando == 2){
-		fwrite(&datos[0],len,1,copia);
+		int w = fwrite(&datos[0],1,len,copia);
 	}
 	else if(comando == 3){
 		fclose(copia);
@@ -132,13 +134,21 @@ int main(int argc,char* argv[]){
 
 	if(dir_dest){
 		printf("Enviando archivo...\n");
-    	enviar(dir_dest,1,file,strlen(file)+2);
-    	f = fopen(file,"rb");
+		char pos = 0,i;
+    	if(!(f = fopen(file,"r"))){
+    		printf("No se pudo abrir archivo %s\n",file);
+    		exit(0);
+    	}
+		for(i = 0;i<strlen(file);i++){
+			if(file[i]=='/'){
+				pos = i+1;
+			}
+		}
+    	enviar(dir_dest,1,file+pos,strlen(file)-pos+1);
     	char c[10];
     	int e=0,leidos;
     	float env;
     	while(leidos=fread(&c,1,ltrama,f)){
-    		//printf("leidos %d bytes\n",leidos);
     		enviar(dir_dest,2,&c[0],leidos);
     		//e+=leidos;
     		//env = (float)e/1024;
