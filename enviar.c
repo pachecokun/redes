@@ -5,13 +5,15 @@
 #include <net/if.h>
 #include <net/if_arp.h>
 #define ltrama 100
-
+#define ventana 3
+#define maxn 4
 
 pcap_t* pcap;
 char dir;
 char packet[100];
 FILE* f;
 FILE*copia;
+char nr,ns;
 
 void procesar(int comando,char*datos,int len){
 	//printf("comando: %d, longitud: %d, datos: %s\n",comando,len,datos);
@@ -49,10 +51,7 @@ void enviar(char dest,char comando, char* datos,char len){
 	char packet[15+len];
 	int i;
 		
-	for(i = 0;i<6;i++){
-		packet[i]=0xff;
-	}
-	for(i = 6;i<12;i++){
+	for(i = 0;i<12;i++){
 		packet[i]=0x0a;
 	}
 	
@@ -77,12 +76,7 @@ void callback(u_char *args,const struct pcap_pkthdr* pkthdr,const u_char*
 	int i;
 	
 	char dest = packet[12];
-	for(i = 0;i<6;i++){
-		if(packet[i]!=0xff){
-			return;
-		}
-	}
-	for(i = 6;i<12;i++){
+	for(i = 0;i<12;i++){
 		if(packet[i]!=0x0a){
 			return;
 		}
@@ -132,7 +126,12 @@ int main(int argc,char* argv[]){
     char *dev = pcap_lookupdev(pcap_errbuf);
     if(dev == NULL)
     { printf("%s\n",pcap_errbuf); exit(1); }
-    pcap = pcap_open_live(dev,BUFSIZ,1,-1,pcap_errbuf);
+    sprintf(dev,"%s","lo");
+    int to = -1;
+    if(dir_dest){
+    	to = 100;
+    }
+    pcap = pcap_open_live(dev,BUFSIZ,1,to,pcap_errbuf);
     printf("Utilizando interfaz %s\n",dev);
 	if (pcap_errbuf[0]!='\0') {
 		fprintf(stderr,"%s",pcap_errbuf);
@@ -157,6 +156,7 @@ int main(int argc,char* argv[]){
     	char c[10];
     	int e=0,leidos;
     	float env;
+    	int cont = 0;
     	while(leidos=fread(&c,1,ltrama,f)){
     		enviar(dir_dest,2,&c[0],leidos);
     		//e+=leidos;
