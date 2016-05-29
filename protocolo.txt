@@ -1,0 +1,67 @@
+Capa de enlace: Controla el manejo de errores 
+
+	t. control | tipo_trama | nr/ns | longitud | datos
+
+	t. control : 12 bytes a0
+
+	tipo_trama: 1 byte
+	
+		1. Información
+		2. ACK
+		3. NACK
+	
+	nr/ns: 1 byte [0-7]
+
+	longitud: 1 byte
+
+	datos: variable
+	
+Capa de Red
+
+	dir destino | dir origen | longitud | datos
+
+	dir destino: 1 byte. ff para broadcast
+
+	dir origen: 1 byte
+
+	longitud: 1 byte
+
+	datos: variable
+
+Capa de sesión
+
+comando | longitud | datos
+
+	comando: 1 byte
+
+		1. Inicio de transmisión
+		2. Fragmento de archivo
+		3. Fin transmisión
+	
+	longitud: 1 byte
+
+	mensaje: Contenido depende de comando
+	
+		Inicio de trama: Nombre de archivo a transmitir
+		Fragmento de archivo: 100 bytes o menos de información del archivo
+		Fin transmisión: Sin datos, relleno
+		
+Capa de presentación:
+
+	Transmisor: Lee bytes de archivo de cualquier tipo y los introduce en un mensaje de fragmento de archivo
+	
+	Receptor: Toma los bytes recibidos en mensajes de fragmento de archivo y los escribe en el archivo especificado en el inicio de transmisión
+	
+Capa de aplicación:
+
+	Consiste de un programa en c que es llamado desde una interfaz de texto de la siguiente manera:
+	
+	Para recibir archivo: enviar [dir] r
+	
+	Para recibir archivo: enviar [dir] s [dest] [archivo]
+	
+	Parámetros
+	
+		dir: dirección del equipo
+		dest: dirección del equipo de destino
+		archivo: ruta del archivo 
