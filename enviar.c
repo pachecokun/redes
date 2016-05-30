@@ -14,8 +14,9 @@ char packet[100];
 FILE* f;
 FILE*copia;
 char nr,ns;
+char ack;
 
-void procesar(int comando,char*datos,int len){
+void procesar(char orig,int comando,char*datos,int len){
 	//printf("comando: %d, longitud: %d, datos: %s\n",comando,len,datos);
 	if(comando == 1){
 		char nfile[8+len];
@@ -30,11 +31,15 @@ void procesar(int comando,char*datos,int len){
 	}
 	else if(comando == 2){
 		int w = fwrite(&datos[0],1,len,copia);
+		enviar(orig,dir,4,NULL,0);
 	}
 	else if(comando == 3){
 		fclose(copia);
-		printf("archivo recibido\n");
+		printf("archivo recibido \n");
 		exit(0);
+	}
+	else if(comando == 4){
+		ack = 1;
 	}
 }
 
@@ -48,8 +53,8 @@ void ptrama(char*trama,int len){
 	}
 }
 
-void enviar(char dest,char comando, char* datos,char len){
-	char packet[15+len];
+void enviar(char dest,char orig,char comando, char* datos,char len){
+	char packet[16+len];
 	int i;
 		
 	for(i = 0;i<12;i++){
@@ -57,10 +62,11 @@ void enviar(char dest,char comando, char* datos,char len){
 	}
 	
     packet[12] = dest;
-    packet[13] = comando;
-    packet[14] = len;
+    packet[13] = orig;
+    packet[14] = comando;
+    packet[15] = len;
     
-    memcpy(&packet[15],datos,len);
+    memcpy(&packet[16],datos,len);
     
     
     if (pcap_inject(pcap,&packet,sizeof(packet))==-1) {
@@ -77,6 +83,7 @@ void callback(u_char *args,const struct pcap_pkthdr* pkthdr,const u_char*
 	int i;
 	
 	char dest = packet[12];
+	char orig = packet[13];
 	for(i = 0;i<12;i++){
 		if(packet[i]!=0x0a){
 			return;
@@ -86,11 +93,11 @@ void callback(u_char *args,const struct pcap_pkthdr* pkthdr,const u_char*
 		return;
 	}
 	
-	char comando = packet[13];
-	int len = packet[14];
+	char comando = packet[14];
+	int len = packet[15];
 	char datos[len];
-	memcpy(datos,&packet[15],len);
-	procesar(comando,&datos[0],len);
+	memcpy(datos,&packet[16],len);
+	procesar(orig,comando,&datos[0],len);
 	
 }
 
@@ -101,23 +108,23 @@ int main(int argc,char* argv[]){
 	if(argc < 3){
 		ok = 0;
 	}
-	else if(strcmp(argv[2],"s")!=0&&strcmp(argv[2],"r")!=0){
+	else if(strcmp(argv[3],"s")!=0&&strcmp(argv[3],"r")!=0){
 		ok = 0;
 	}
 	else{
-		dir = atoi(argv[1]);
-		if(strcmp(argv[2],"s")==0){
+		dir = atoi(argv[2]);
+		if(strcmp(argv[3],"s")==0){
 			if (argc<5){
 				ok = 0;
 			}
 			else{
-				dir_dest = atoi(argv[3]);
-				file = argv[4];
+				dir_dest = atoi(argv[4]);
+				file = argv[5];
 			}
 		}
 	}
 	if(!ok){
-		printf("USO:\n\nenviar dir s dir_destino archvo\n\nenviar dir r\n\n");
+		printf("USO:\n\nenviar interfaz dir s dir_destino archvo\n\nenviar intefaz dir r\n\n");
 		exit(0);
 	}
 	
@@ -127,12 +134,13 @@ int main(int argc,char* argv[]){
     char *dev = pcap_lookupdev(pcap_errbuf);
     if(dev == NULL)
     { printf("%s\n",pcap_errbuf); exit(1); }
-    sprintf(dev,"%s","lo");
+    //sprintf(dev,"%s","lo");
     int to = -1;
     if(dir_dest){
-    	to = 100;
+    	to = 1000;
     }
     pcap = pcap_open_live(dev,BUFSIZ,1,to,pcap_errbuf);
+    sprintf(dev,"%s",argv[1]);
     printf("Utilizando interfaz %s\n",dev);
 	if (pcap_errbuf[0]!='\0') {
 		fprintf(stderr,"%s",pcap_errbuf);
@@ -153,18 +161,25 @@ int main(int argc,char* argv[]){
 				pos = i+1;
 			}
 		}
-    	enviar(dir_dest,1,file+pos,strlen(file)-pos+1);
+    	enviar(dir_dest,dir,1,file+pos,strlen(file)-pos+1);
     	char c[10];
     	int e=0,leidos;
     	float env;
     	int cont = 0;
     	while(leidos=fread(&c,1,ltrama,f)){
-    		enviar(dir_dest,2,&c[0],leidos);
-    		//e+=leidos;
-    		//env = (float)e/1024;
-    		//printf("Enviados %f kB\n",env);
+    		ack = 0;
+    		int in = 0;
+    		while(!ack){
+    			enviar(dir_dest,dir,2,&c[0],leidos);
+    			pcap_loop(pcap,1,callback,NULL);
+    			in++;
+    		}
+    		//printf("%d intentos \n",in);
+    		e+=leidos;
+    		env = (float)e/1024;
+    		printf("Enviados %f kB\n",env);
     	}
-    	enviar(dir_dest,3,NULL,0);
+    	enviar(dir_dest,dir,3,NULL,0);
     	printf("Archivo enviado\n");
     }
     else{
